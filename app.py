@@ -1,9 +1,10 @@
 #Import dependencies
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, redirect, render_template, url_for
 from flask_pymongo import PyMongo
+
 import scraping
 
-#Setting up flask
+#Setting up flaskp
 app = Flask(__name__)
 
 # Use flask_pymongo to set up mongo connection
