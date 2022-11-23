@@ -11,14 +11,16 @@ def scrape_all():
     browser = Browser('chrome', **executable_path, headless=False)
     
     news_title, news_p  = mars_news(browser)
-
+        
     # Run all scraping functions and store results in dictionary
     data = {
         "news_title": news_title,
         "news_paragraph": news_p,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
+        "hemisphere_name_url": hemisphere_images(browser),
         "last_modified": dt.datetime.now()
+        
     }
     #Stop webdriver and return data
     browser.quit()
@@ -89,6 +91,54 @@ def mars_facts():
     df.set_index('Description', inplace=True)
     
     return df.to_html()
+
+### Mars Hemisphere
+
+def hemisphere_images(browser):
+    # Use browser to visit the URL 
+    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+
+    browser.visit(url)
+
+    # Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+
+    # Write code to retrieve the image urls and titles for each hemisphere.
+    hem_images = browser.find_by_css('a.product-item h3')
+
+    # Create a for loop to click through the links and find the sample anchor to return the href
+    for index in range(len(hem_images)):
+            
+        # Find the elements on each loop to avoid a state element exception.
+        browser.find_by_css('a.product-item h3')[index].click()
+        hemisphere_data = scrape_hempisphere(browser.html)
+        hemisphere_data['img_url'] = url + hemisphere_data['img_url']
+        hemisphere_image_urls.append(hemisphere_data)
+    
+        #Finally we navigate back to the main page
+        browser.back()
+
+        # Print the list that holds the dictionary of each image url and title.
+    return hemisphere_image_urls
+
+def scrape_hempisphere(html_text):
+    hemi_soup = soup(html_text, "html.parser")
+
+    try:
+        title_element = hemi_soup.find("h2", class_="title").get_text()
+        sample_element = hemi_soup.find("a", text="Sample").get("href")
+    except AttributeError:
+        title_element = None
+        sample_element = None
+    hemispheres_dict = {
+        "title": title_element,
+        "img_url": sample_element
+    }
+    return hemispheres_dict
+
+
+
 if __name__ == "__main__":
     # If running as script, prein scrapped data
     print(scrape_all())
+
